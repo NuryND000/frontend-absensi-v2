@@ -33,7 +33,7 @@ const useAuth = () => {
   // 🔹 Refresh Token
   const refreshToken = useCallback(async () => {
     try {
-      const response = await api.get("/token", { withCredentials: true });
+      const response = await api.get("/token");
       const accessToken = response.data.accessToken;
       setToken(accessToken);
 
