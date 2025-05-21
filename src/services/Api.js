@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://student-attendance.myuniv.cloud", // Sesuaikan dengan backend-mu
+    baseURL: "http://student-attendance.myuniv.cloud/api", // Sesuaikan dengan backend-mu
     headers: { "Content-Type": "application/json" },
     withCredentials: true // Penting untuk mengirim cookie!
 });
