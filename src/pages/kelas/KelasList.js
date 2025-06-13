@@ -135,13 +135,13 @@ const KelasList = () => {
               <div className="column">
                 <div className="field">
                   <div className="control has-icons-left has-icons-right">
-<input
-  className="input is-warning is-rounded"
-  type="text"
-  placeholder="Pencarian Kelas"
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-/>
+                    <input
+                      className="input is-warning is-rounded"
+                      type="text"
+                      placeholder="Pencarian Kelas"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
 
                     <span className="icon is-left">
                       <i>

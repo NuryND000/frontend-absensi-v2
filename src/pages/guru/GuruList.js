@@ -14,6 +14,7 @@ import AuthLayouts from "../../layouts/AuthLayouts.jsx";
 import { getGuru } from "../../services/guruService";
 import { importUser, deleteUserById } from "../../services/userService.js";
 import { IoIosArrowDown } from "react-icons/io";
+import { Link } from "react-router-dom";
 
 const GuruList = () => {
   const [gurus, setGurus] = useState([]);
@@ -107,12 +108,12 @@ const GuruList = () => {
   };
 
   const handleSubmit = async () => {
-  if (!file) {
-    setErrorMessage("Silakan pilih file terlebih dahulu.");
-    return;
-  }
+    if (!file) {
+      setErrorMessage("Silakan pilih file terlebih dahulu.");
+      return;
+    }
 
-  setIsUploading(true); // mulai loading
+    setIsUploading(true); // mulai loading
 
     try {
       const formData = new FormData();
@@ -120,15 +121,15 @@ const GuruList = () => {
 
       const response = await importUser(formData);
       if (response.data.gagal === 0) {
-        alert(`${response.data.berhasil} Data Berhasil di Tambahkan`);    
-      }else if(response.data.gagal !== 0) {
+        alert(`${response.data.berhasil} Data Berhasil di Tambahkan`);
+      } else if (response.data.gagal !== 0) {
         alert(`
         Berhasil: ${response.data.berhasil}
         Gagal: ${response.data.gagal}
         Daftar Gagal: 
         ${response.data.detail_gagal.map(item =>
-        `Row ${item.row - 1}: ${item.data} - Reason: ${item.reason}`).join("\n")}
-      `);  
+          `Row ${item.row - 1}: ${item.data} - Reason: ${item.reason}`).join("\n")}
+      `);
       } else {
         alert("Gagal mengimpor data.");
       }
@@ -138,9 +139,9 @@ const GuruList = () => {
     } catch (error) {
       console.error(error);
       alert("Failed to upload data");
-    }finally {
-    setIsUploading(false); // selesai loading
-  }
+    } finally {
+      setIsUploading(false); // selesai loading
+    }
   };
 
   const openModal = () => {
@@ -241,13 +242,13 @@ const GuruList = () => {
                     </button>
                   </div>
                   <div className="control">
-                    <a
-                      href="/template_import_user.xlsx"
+                    <Link
+                      to="/template_import_user.xlsx"
                       download
                       className="button is-warning is-small is-fullwidth-mobile"
                     >
                       Export Form
-                    </a>
+                    </Link>
                   </div>
                   <div className="control">
                     <div className="file is-info has-name is-small is-fullwidth-mobile">
@@ -271,18 +272,18 @@ const GuruList = () => {
                   </div>
                   <div className="control">
                     <button
-  onClick={handleSubmit}
-  className="button is-info is-small is-fullwidth-mobile"
-  disabled={isUploading}
->
-  {isUploading ? (
-    <>
-      <span className="loader is-loading mr-2"></span> Uploading...
-    </>
-  ) : (
-    "Upload"
-  )}
-</button>
+                      onClick={handleSubmit}
+                      className="button is-info is-small is-fullwidth-mobile"
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <>
+                          <span className="loader is-loading mr-2"></span> Uploading...
+                        </>
+                      ) : (
+                        "Upload"
+                      )}
+                    </button>
 
                   </div>
                 </div>
@@ -303,13 +304,13 @@ const GuruList = () => {
               <div className="column">
                 <div className="field">
                   <div className="control has-icons-left has-icons-right">
-<input
-  className="input is-warning is-rounded"
-  type="text"
-  placeholder="Pencarian Nama / NIP"
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-/>
+                    <input
+                      className="input is-warning is-rounded"
+                      type="text"
+                      placeholder="Pencarian Nama / NIP"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
 
                     <span className="icon is-left">
                       <i>

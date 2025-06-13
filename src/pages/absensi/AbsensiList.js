@@ -11,6 +11,7 @@ import {
 } from "../../services/attendanceService.js";
 import { IoIosArrowDown } from "react-icons/io";
 import { deleteManyDetailAttendance } from "../../services/detailAttendanceService.js";
+import { Link } from "react-router-dom";
 
 const AbsensiList = () => {
   const [attendance, setAtt] = useState([]);
@@ -290,12 +291,12 @@ const AbsensiList = () => {
                         {a.tahun_id?.name}, {a.tahun_id?.semester}
                       </td>
                       <td>
-                        <a
-                          href={`/absensi/edit/${a._id}`}
+                        <Link
+                          to={`/absensi/edit/${a._id}`}
                           className="button is-info is-small m-1"
                         >
                           <BsGearFill />
-                        </a>
+                        </Link>
 
                         <button
                           onClick={() => submit(a._id)}

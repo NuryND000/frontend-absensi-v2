@@ -11,7 +11,7 @@ import { BsFillJournalBookmarkFill, BsFillPersonFill } from "react-icons/bs";
 import logo from "./../assets/logo-text-02.png";
 import useAuth from "../services/authService";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const Navbar = () => {
 
   const Logout = async () => {
     try {
-      await axios.delete("http://localhost:1122/logout");
+      await axios.delete("https://student-attendance.myuniv.cloud/api/logout");
       navigate("/");
     } catch (error) {
       console.log(error);
@@ -40,9 +40,9 @@ const Navbar = () => {
   return (
     <nav className="navbar" role="navigation" aria-label="main navigation">
       <div className="navbar-brand">
-        <a className="navbar-item" href="/home">
+        <Link className="navbar-item" to="/home">
           <img src={logo} alt="Logo" />
-        </a>
+        </Link>
 
         {/* Navbar Burger untuk Mobile */}
         <button
@@ -63,40 +63,40 @@ const Navbar = () => {
           {/* Navbar untuk Admin */}
           {role === "admin" && (
             <>
-              <a className="navbar-item" href="/dashboard">
+              <Link className="navbar-item" to="/dashboard">
                 <span>
                   <FaHome className="mr-2 has-text-white" />
                 </span>
                 Dashboard
-              </a>
+              </Link>
 
               {/* Jika layar kecil, tampilkan sebagai item biasa */}
               {isMobile ? (
                 <>
-                  <a href="/user" className="navbar-item">
+                  <Link to="/user" className="navbar-item">
                     <FaUser className="mr-2" /> User
-                  </a>
-                  <a href="/siswa" className="navbar-item">
+                  </Link>
+                  <Link to="/siswa" className="navbar-item">
                     <FaUsers className="mr-2" /> Siswa
-                  </a>
-                  <a href="/guru" className="navbar-item">
+                  </Link>
+                  <Link to="/guru" className="navbar-item">
                     <FaChalkboardTeacher className="mr-2" /> Guru
-                  </a>
+                  </Link>
                   <hr className="navbar-divider" />
-                  <a href="/kelas" className="navbar-item">
+                  <Link to="/kelas" className="navbar-item">
                     <FaBook className="mr-2" /> Kelas
-                  </a>
-                  <a href="/mapel" className="navbar-item">
+                  </Link>
+                  <Link to="/mapel" className="navbar-item">
                     <BsFillJournalBookmarkFill className="mr-2" /> Mata
                     Pelajaran
-                  </a>
-                  <a href="/tahun" className="navbar-item">
+                  </Link>
+                  <Link to="/tahun" className="navbar-item">
                     <BsFillJournalBookmarkFill className="mr-2" /> Tahun Ajar
-                  </a>
+                  </Link>
                   <hr className="navbar-divider" />
-                  <a href="/siswa/import-update" className="navbar-item">
+                  <Link to="/siswa/import-update" className="navbar-item">
                     <FaBook className="mr-2" /> Update Kelas
-                  </a>
+                  </Link>
                 </>
               ) : (
                 <div className="navbar-item has-dropdown is-hoverable">
@@ -105,30 +105,30 @@ const Navbar = () => {
                     <p>Data</p>
                   </button>
                   <div className="navbar-dropdown is-boxed">
-                    <a href="/user" className="navbar-item">
+                    <Link to="/user" className="navbar-item">
                       <FaUser className="mr-2" /> User
-                    </a>
-                    <a href="/siswa" className="navbar-item">
+                    </Link>
+                    <Link to="/siswa" className="navbar-item">
                       <FaUsers className="mr-2" /> Siswa
-                    </a>
-                    <a href="/guru" className="navbar-item">
+                    </Link>
+                    <Link to="/guru" className="navbar-item">
                       <FaChalkboardTeacher className="mr-2" /> Guru
-                    </a>
+                    </Link>
                     <hr className="navbar-divider" />
-                    <a href="/kelas" className="navbar-item">
+                    <Link to="/kelas" className="navbar-item">
                       <FaBook className="mr-2" /> Kelas
-                    </a>
-                    <a href="/mapel" className="navbar-item">
+                    </Link>
+                    <Link to="/mapel" className="navbar-item">
                       <BsFillJournalBookmarkFill className="mr-2" /> Mata
                       Pelajaran
-                    </a>
-                    <a href="/tahun" className="navbar-item">
+                    </Link>
+                    <Link to="/tahun" className="navbar-item">
                       <BsFillJournalBookmarkFill className="mr-2" /> Tahun Ajar
-                    </a>
+                    </Link>
                   <hr className="navbar-divider" />
-                  <a href="/siswa/import-update" className="navbar-item">
+                  <Link to="/siswa/import-update" className="navbar-item">
                     <FaBook className="mr-2" /> Update Kelas
-                  </a>
+                  </Link>
                   </div>
                 </div>
               )}
@@ -140,15 +140,15 @@ const Navbar = () => {
             <>
               {isMobile ? (
                 <>
-                  <a href="/absensi/add" className="navbar-item">
+                  <Link to="/absensi/add" className="navbar-item">
                     <FaClipboardList className="mr-2" /> Tambah Absensi
-                  </a>
-                  <a href="/absensi" className="navbar-item">
+                  </Link>
+                  <Link to="/absensi" className="navbar-item">
                     <FaClipboardList className="mr-2" /> Data Absensi
-                  </a>
-                  <a href="/laporan" className="navbar-item">
+                  </Link>
+                  <Link to="/laporan" className="navbar-item">
                     <BsFillJournalBookmarkFill className="mr-2" /> Laporan
-                  </a>
+                  </Link>
                 </>
               ) : (
                 <div className="navbar-item has-dropdown is-hoverable">
@@ -157,15 +157,15 @@ const Navbar = () => {
                     <p>Absensi</p>
                   </button>
                   <div className="navbar-dropdown is-boxed">
-                    <a href="/absensi/add" className="navbar-item">
+                    <Link to="/absensi/add" className="navbar-item">
                       <FaClipboardList className="mr-2" /> Tambah Absensi
-                    </a>
-                    <a href="/absensi" className="navbar-item">
+                    </Link>
+                    <Link to="/absensi" className="navbar-item">
                       <FaClipboardList className="mr-2" /> Data Absensi
-                    </a>
-                    <a href="/laporan" className="navbar-item">
+                    </Link>
+                    <Link to="/laporan" className="navbar-item">
                       <BsFillJournalBookmarkFill className="mr-2" /> Laporan
-                    </a>
+                    </Link>
                   </div>
                 </div>
               )}
@@ -174,18 +174,18 @@ const Navbar = () => {
 
           {/* Navbar untuk Siswa */}
           {role === "siswa" && (
-            <a className="navbar-item" href="/absensi-siswa">
+            <Link className="navbar-item" to="/absensi-siswa">
               <span>
                 <FaClipboardList className="mr-2 has-text-white" />
               </span>
               Data Absensi
-            </a>
+            </Link>
           )}
           {isMobile ? (
             <>
-              <a className="navbar-item" href="/change-password">
+              <Link className="navbar-item" to="/change-password">
                 <span>🔑</span> Ganti Password
-              </a>
+              </Link>
               <hr className="navbar-divider" />
               <button
                 className="navbar-item is-white has-text-danger"
@@ -205,9 +205,9 @@ const Navbar = () => {
                 </div>
               </button>
               <div className="navbar-dropdown is-boxed">
-                <a className="navbar-item" href="/change-password">
+                <Link className="navbar-item" to="/change-password">
                   <span>🔑</span> Ganti Password
-                </a>
+                </Link>
                 <hr className="navbar-divider" />
                 <button
                   className="navbar-item is-white has-text-danger"

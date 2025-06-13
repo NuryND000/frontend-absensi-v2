@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../services/authService.js";
 import AuthLayouts from "../../layouts/AuthLayouts.jsx";
 import { createAttendance } from "../../services/attendanceService.js";
@@ -345,9 +345,9 @@ const AddAbsensi = () => {
               >
                 Save
               </button>
-              <a href="/absensi" className="button">
+              <Link to="/absensi" className="button">
                 Cancel
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ import { getSiswa, deleteSiswaById } from "../../services/siswaService.js";
 import { importUser } from "../../services/userService.js";
 import { getKelas } from "../../services/kelasService.js";
 import { IoIosArrowDown } from "react-icons/io";
+import { Link } from "react-router-dom";
 
 const SiswaList = () => {
   const [siswas, setSiswas] = useState([]);
@@ -251,13 +252,13 @@ const SiswaList = () => {
                     </button>
                   </div>
                   <div className="control">
-                    <a
-                      href="/template_import_user.xlsx"
+                    <Link
+                      to="/template_import_user.xlsx"
                       download
                       className="button is-warning is-small is-fullwidth-mobile"
                     >
                       Export Form
-                    </a>
+                    </Link>
                   </div>
                   <div className="control">
                     <div className="file is-info has-name is-small is-fullwidth-mobile">

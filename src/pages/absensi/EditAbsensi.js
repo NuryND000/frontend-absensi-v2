@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import useAuth from "../../services/authService.js";
 import AuthLayouts from "../../layouts/AuthLayouts.jsx";
 import {
@@ -261,9 +261,9 @@ const EditAbsensi = () => {
                     </button>
                   </div>
                   <div className="control">
-                    <a href="/absensi" className="button is-medium">
+                    <Link to="/absensi" className="button is-medium">
                       Batal
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </form>
