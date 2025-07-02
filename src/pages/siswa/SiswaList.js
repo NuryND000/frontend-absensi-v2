@@ -38,7 +38,9 @@ const SiswaList = () => {
     const fetchSiswa = async () => {
       try {
         const response = await getSiswa(token);
-        setSiswas(response);
+                const dataAktif = response
+          .filter((user) => user.status === "aktif");
+        setSiswas(dataAktif);
         setFilteredSiswas(response);
       } catch (error) {
         console.log(error);

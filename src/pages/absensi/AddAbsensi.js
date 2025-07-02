@@ -42,6 +42,7 @@ const AddAbsensi = () => {
       try {
         const response = await getSiswaByKelasId(token, kelasId);
         const sorted = response
+          .filter((user) => user.status === "aktif") 
           .sort((a, b) => a.name.localeCompare(b.name)) // Urutkan berdasarkan nama
           .map((siswa) => ({ ...siswa, status: "h", keterangan: "" })); // Set default status to 'h'
         setSiswas(sorted);

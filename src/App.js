@@ -5,6 +5,7 @@ import KelasList from "./pages/kelas/KelasList.js";
 import MapelList from "./pages/mapel/MapelList.js";
 
 import SiswaList from "./pages/siswa/SiswaList.js";
+import SiswaListTA from "./pages/siswa/SiswaListTA.js";
 import EditSiswa from "./pages/siswa/EditSiswa.js";
 import AddSiswa from "./pages/siswa/AddSiswa.js";
 import SiswaExport from "./pages/siswa/SiswaExport.js";
@@ -83,6 +84,10 @@ function App() {
           <Route
             path="/siswa"
             element={<PrivateRoute roles={["admin"]} element={SiswaList} />}
+          />
+          <Route
+            path="/siswa/tidak-aktif"
+            element={<PrivateRoute roles={["admin"]} element={SiswaListTA} />}
           />
           <Route
             path="/siswa/add"

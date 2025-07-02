@@ -33,7 +33,9 @@ const UserList = () => {
     const fetchUsers = async () => {
       try {
         const response = await getUsers(token);
-        setUsers(response);
+               const dataAktif = response
+          .filter((user) => user.status === "aktif");
+        setUsers(dataAktif);
         setFilteredUsers(response);
       } catch (error) {
         console.log(error);

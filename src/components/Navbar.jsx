@@ -79,6 +79,9 @@ const Navbar = () => {
                   <Link to="/siswa" className="navbar-item">
                     <FaUsers className="mr-2" /> Siswa
                   </Link>
+                  <Link to="/siswa/tidak-aktif" className="navbar-item">
+                    <FaUsers className="mr-2" /> Siswa Lama
+                  </Link>
                   <Link to="/guru" className="navbar-item">
                     <FaChalkboardTeacher className="mr-2" /> Guru
                   </Link>
@@ -111,6 +114,9 @@ const Navbar = () => {
                     <Link to="/siswa" className="navbar-item">
                       <FaUsers className="mr-2" /> Siswa
                     </Link>
+                    <Link to="/siswa/tidak-aktif" className="navbar-item">
+                      <FaUsers className="mr-2" /> Siswa Lama
+                    </Link>
                     <Link to="/guru" className="navbar-item">
                       <FaChalkboardTeacher className="mr-2" /> Guru
                     </Link>
@@ -125,10 +131,10 @@ const Navbar = () => {
                     <Link to="/tahun" className="navbar-item">
                       <BsFillJournalBookmarkFill className="mr-2" /> Tahun Ajar
                     </Link>
-                  <hr className="navbar-divider" />
-                  <Link to="/siswa/import-update" className="navbar-item">
-                    <FaBook className="mr-2" /> Update Kelas
-                  </Link>
+                    <hr className="navbar-divider" />
+                    <Link to="/siswa/import-update" className="navbar-item">
+                      <FaBook className="mr-2" /> Update Kelas
+                    </Link>
                   </div>
                 </div>
               )}

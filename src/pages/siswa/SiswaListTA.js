@@ -7,18 +7,21 @@ import {
 } from "react-icons/bs";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import AddUser from "./AddGuru";
+import AddUser from "./AddSiswa";
 import EditUser from "../user/EditUser";
 import useAuth from "../../services/authService.js";
 import AuthLayouts from "../../layouts/AuthLayouts.jsx";
-import { getGuru } from "../../services/guruService";
-import { importUser, deleteUserById } from "../../services/userService.js";
+import { getSiswa, deleteSiswaById } from "../../services/siswaService.js";
+import { importUser } from "../../services/userService.js";
+import { getKelas } from "../../services/kelasService.js";
+import { getTahun } from "../../services/tahunAjarSevice.js";
 import { IoIosArrowDown } from "react-icons/io";
 import { Link } from "react-router-dom";
 
-const GuruList = () => {
-  const [gurus, setGurus] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
+const SiswaListTA = () => {
+  const [siswas, setSiswas] = useState([]);
+  const [kelass, setKelas] = useState([]);
+  const [filteredSiswas, setFilteredSiswas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -30,16 +33,19 @@ const GuruList = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isUploading, setIsUploading] = useState(false);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [years, setYears] = useState([]); // Data tahun ajar
 
   useEffect(() => {
     const fetchSiswa = async () => {
       try {
-        const response = await getGuru(token);
-                const dataAktif = response
-          .filter((user) => user.status === "aktif");
-        setGurus(dataAktif);
-        setFilteredUsers(response);
+        const response = await getSiswa(token);
+        const dataAktif = response.filter(
+          (user) => user.status === "tidakAktif",
+        );
+        setSiswas(dataAktif);
+        setFilteredSiswas(dataAktif);
       } catch (error) {
         console.log(error);
       }
@@ -50,31 +56,70 @@ const GuruList = () => {
   }, [token, refreshToken]);
 
   useEffect(() => {
-    let filtered = gurus.filter(
-      (user) =>
-        (user.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        user.username?.includes(search) ||
-        false
-    );
+    const fetchYears = async () => {
+      try {
+        const response = await getTahun(token); // Pastikan ada service-nya
+        setYears(response);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchYears();
+  }, [token]);
 
-    filtered.sort((a, b) => {
-      const getValueByPath = (obj, path) =>
-        path.split(".").reduce((acc, key) => acc?.[key], obj);
+  useEffect(() => {
+    const fetchKelas = async () => {
+      try {
+        const response = await getKelas(token);
+        setKelas(response);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-      let valA = getValueByPath(a, sortColumn) || "";
-      let valB = getValueByPath(b, sortColumn) || "";
+    fetchKelas();
+  }, [token]);
 
-      // Konversi nilai ke string untuk memastikan `localeCompare` tidak error
-      valA = String(valA).toLowerCase();
-      valB = String(valB).toLowerCase();
+  useEffect(() => {
+    let filtered = siswas;
+    if (selectedClass) {
+      filtered = filtered.filter(
+        (user) => user.class_id?._id === selectedClass,
+      );
+    }
 
-      return sortOrder === "asc"
-        ? valA.localeCompare(valB)
-        : valB.localeCompare(valA);
-    });
+    if (selectedYear) {
+      filtered = filtered.filter(
+        (user) => user.tahun_id?._id === selectedYear, // atau sesuaikan field di database
+      );
+    }
 
-    setFilteredUsers(filtered);
-  }, [search, sortColumn, sortOrder, gurus]);
+    if (search) {
+      filtered = filtered.filter(
+        (user) =>
+          (user.name?.toLowerCase() || "").startsWith(search.toLowerCase()) ||
+          (user.username?.toLowerCase() || "").startsWith(search.toLowerCase()),
+      );
+    }
+
+    if (selectedClass && selectedYear) {
+      filtered.sort((a, b) => {
+        const getValueByPath = (obj, path) =>
+          path.split(".").reduce((acc, key) => acc?.[key], obj);
+
+        let valA = String(getValueByPath(a, sortColumn) || "").toLowerCase();
+        let valB = String(getValueByPath(b, sortColumn) || "").toLowerCase();
+
+        return sortOrder === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
+      });
+      setFilteredSiswas(filtered);
+    } else {
+      // Jangan tampilkan apa pun jika filter belum lengkap
+      setFilteredSiswas([]);
+    }
+  }, [search, sortColumn, sortOrder, siswas, selectedClass, selectedYear]);
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -98,7 +143,7 @@ const GuruList = () => {
 
     if (!allowedExtensions.includes(fileExtension)) {
       setErrorMessage(
-        "Hanya file Excel (.xls, .xlsx) atau CSV yang diperbolehkan!"
+        "Hanya file Excel (.xls, .xlsx) atau CSV yang diperbolehkan!",
       );
       setFile(null);
       e.target.value = "";
@@ -110,39 +155,34 @@ const GuruList = () => {
   };
 
   const handleSubmit = async () => {
-    if (!file) {
-      setErrorMessage("Silakan pilih file terlebih dahulu.");
-      return;
-    }
-
-    setIsUploading(true); // mulai loading
-
     try {
       const formData = new FormData();
       formData.append("file", file);
 
       const response = await importUser(formData);
       if (response.data.gagal === 0) {
-        alert(`${response.data.berhasil} Data Berhasil di Tambahkan`);
+        alert(`${response.data.berhasil} Data Berhasil di Update`);
       } else if (response.data.gagal !== 0) {
         alert(`
         Berhasil: ${response.data.berhasil}
         Gagal: ${response.data.gagal}
         Daftar Gagal: 
-        ${response.data.detail_gagal.map(item =>
-          `Row ${item.row - 1}: ${item.data} - Reason: ${item.reason}`).join("\n")}
+        ${response.data.detail_gagal
+          .map(
+            (item) =>
+              `Row ${item.row - 1}: ${item.data} - Reason: ${item.reason}`,
+          )
+          .join("\n")}
       `);
       } else {
         alert("Gagal mengimpor data.");
       }
-      const userss = await getGuru(token);
-      setGurus(userss);
-      setFilteredUsers(userss);
+      const userss = await getSiswa(token);
+      setSiswas(userss);
+      setFilteredSiswas(userss);
     } catch (error) {
       console.error(error);
       alert("Failed to upload data");
-    } finally {
-      setIsUploading(false); // selesai loading
     }
   };
 
@@ -152,9 +192,9 @@ const GuruList = () => {
 
   const closeModal = async () => {
     setIsModalOpen(false);
-    const response = await getGuru(token);
-    setGurus(response);
-    setFilteredUsers(response);
+    const response = await getSiswa(token);
+    setSiswas(response);
+    setFilteredSiswas(response);
   };
 
   const openEditModal = (user) => {
@@ -167,9 +207,9 @@ const GuruList = () => {
     setSelectedUser(null);
 
     // Refresh data setelah edit
-    const response = await getGuru(token);
-    setGurus(response);
-    setFilteredUsers(response);
+    const response = await getSiswa(token);
+    setSiswas(response);
+    setFilteredSiswas(response);
   };
 
   function convertDateTimeFormat(datetime) {
@@ -201,26 +241,26 @@ const GuruList = () => {
       title: "Konfirmasi",
       message: "Apakah Anda yakin ingin menghapus user ini?",
       buttons: [
-        { label: "Ya", onClick: () => deleteUser(id) },
+        { label: "Ya", onClick: () => deleteSiswa(id) },
         { label: "Tidak" },
       ],
     });
   };
 
-  const deleteUser = async (id) => {
+  const deleteSiswa = async (id) => {
     try {
-      await deleteUserById(token, id);
-      const response = await getGuru(token);
-      setGurus(response);
+      await deleteSiswaById(token, id);
+      const response = await getSiswa(token);
+      setSiswas(response);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const displayedSiswa = filteredUsers.slice(
+  const totalPages = Math.ceil(filteredSiswas.length / itemsPerPage);
+  const displayedSiswa = filteredSiswas.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   return (
@@ -229,79 +269,62 @@ const GuruList = () => {
         <div className="column is-four-fifths">
           {/* Tambah dan Upload User */}
           <div className="box">
-            <div className="columns is-vcentered">
-              <div className="column">
-                <h2 className="title is-5">Guru Management</h2>
+            <div className="columns is-vcentered is-centered">
+              <div className="column is-4">
+                <h2 className="title is-5">Siswa Lama Management</h2>
               </div>
-              <div className="column">
-                <div className="field is-grouped is-flex-wrap-wrap is-flex-direction-column-mobile">
+              <div className="column is-4">
+                <div className="field">
                   <div className="control">
-                    <button
-                      className="button is-primary is-small is-fullwidth-mobile"
-                      onClick={openModal}
+                    <select
+                      className="custom-select select is-fullwidth"
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
                     >
-                      Tambah
-                    </button>
-                  </div>
-                  <div className="control">
-                    <Link
-                      to="/template_import_user.xlsx"
-                      download
-                      className="button is-warning is-small is-fullwidth-mobile"
-                    >
-                      Export Form
-                    </Link>
-                  </div>
-                  <div className="control">
-                    <div className="file is-info has-name is-small is-fullwidth-mobile">
-                      <label className="file-label">
-                        <input
-                          className="file-input"
-                          type="file"
-                          name="resume"
-                          onChange={handleFileChange}
-                        />
-                        <span className="file-cta">
-                          <span className="file-icon">
-                            <BsFileEarmarkArrowUp />
-                          </span>
-                        </span>
-                        <span className="file-name">
-                          {file?.name || "Choose a File..."}
-                        </span>
-                      </label>
+                      <option value="">Pilih Tahun Ajar</option>
+                      {years.map((year) => (
+                        <option key={year._id} value={year._id}>
+                          {year.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="custom-select-arrow">
+                      <IoIosArrowDown />
                     </div>
                   </div>
+                </div>
+              </div>
+              <div className="column is-4">
+                <div className="field">
                   <div className="control">
-                    <button
-                      onClick={handleSubmit}
-                      className="button is-info is-small is-fullwidth-mobile"
-                      disabled={isUploading}
+                    <select
+                      className="custom-select select is-fullwidth"
+                      value={selectedClass}
+                      onChange={(e) => {
+                        setSelectedClass(e.target.value);
+                        setCurrentPage(1);
+                      }}
                     >
-                      {isUploading ? (
-                        <>
-                          <span className="loader is-loading mr-2"></span> Uploading...
-                        </>
-                      ) : (
-                        "Upload"
-                      )}
-                    </button>
-
+                      <option value="">Pilih Kelas</option>
+                      {kelass.map((kelas) => (
+                        <option key={kelas._id} value={kelas._id}>
+                          {kelas.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="custom-select-arrow ">
+                      <IoIosArrowDown />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            {errorMessage && (
-              <p className="has-text-danger mt-2 has-text-centered m-0">
-                {errorMessage}
-              </p>
-            )}
           </div>
 
           <div className="box">
             <div className="columns is-vcentered">
               <div className="column">
-                <h2 className="title is-5">Daftar Guru</h2>
+                <h2 className="title is-5">Daftar Siswa Lama</h2>
               </div>
               <div className="column">
                 <div className="field">
@@ -309,11 +332,10 @@ const GuruList = () => {
                     <input
                       className="input is-warning is-rounded"
                       type="text"
-                      placeholder="Pencarian Nama / NIP"
+                      placeholder="Pencarian Nama / NISN"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
-
                     <span className="icon is-left">
                       <i>
                         <BsSearch />
@@ -323,11 +345,11 @@ const GuruList = () => {
                 </div>
               </div>
               <div className="column">
-                <div className="field has-addons has-addons-centered">
+                <div className="field has-addons has-addons-right">
                   <div className="control">
-                    <div className="custom-select-container is-rounded">
+                    <div className="custom-select-container">
                       <select
-                        className="custom-select is-warning"
+                        className="custom-select"
                         value={itemsPerPage}
                         onChange={(e) =>
                           setItemsPerPage(Number(e.target.value))
@@ -337,7 +359,7 @@ const GuruList = () => {
                         <option value={25}>25</option>
                         <option value={50}>50</option>
                         <option value={100}>100</option>
-                        <option value={filteredUsers.length}>Semua</option>
+                        <option value={filteredSiswas.length}>Semua</option>
                       </select>
                     </div>
                     <div className="custom-select-arrow">
@@ -350,11 +372,11 @@ const GuruList = () => {
             <div
               className="table-container"
               style={{
-                maxHeight: "450px",
+                maxHeight: "350px",
                 overflowY: "auto",
               }}
             >
-              <table className="table is-striped is-fullwidth mt-3">
+              <table className="table is-striped is-fullwidth mt-2">
                 <thead>
                   <tr>
                     <th>No</th>
@@ -362,7 +384,7 @@ const GuruList = () => {
                       onClick={() => handleSort("username")}
                       style={{ cursor: "pointer" }}
                     >
-                      NIP{" "}
+                      NISN{" "}
                       {sortColumn === "username"
                         ? sortOrder === "asc"
                           ? "↑"
@@ -375,6 +397,17 @@ const GuruList = () => {
                     >
                       Nama{" "}
                       {sortColumn === "name"
+                        ? sortOrder === "asc"
+                          ? "↑"
+                          : "↓"
+                        : ""}
+                    </th>
+                    <th
+                      onClick={() => handleSort("class_id.name")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Kelas{" "}
+                      {sortColumn === "class_id.name"
                         ? sortOrder === "asc"
                           ? "↑"
                           : "↓"
@@ -402,34 +435,32 @@ const GuruList = () => {
                           : "↓"
                         : ""}
                     </th>
-                    <th>Aksi</th>
+                    <th
+                      onClick={() => handleSort("tahun_id?.name")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Tahun Ajar{" "}
+                      {sortColumn === "tahun_id?.name"
+                        ? sortOrder === "asc"
+                          ? "↑"
+                          : "↓"
+                        : ""}
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {displayedSiswa?.map((user, index) => (
                     <tr key={user?._id}>
                       <td>{index + 1 + (currentPage - 1) * itemsPerPage}</td>
                       <td>{user.username}</td>
                       <td>{user.name}</td>
+                      <td>{user.class_id?.name || "Tidak ada data"}</td>
                       <td>{user.alamat}</td>
                       <td>
                         {user.tmplahir}, {convertDateTimeFormat(user.tgllahir)}
                       </td>
-                      <td>
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="button is-info is-small m-1"
-                        >
-                          <BsGearFill />
-                        </button>
-
-                        <button
-                          onClick={() => submit(user._id)}
-                          className="button is-danger is-small m-1"
-                        >
-                          <BsTrashFill />
-                        </button>
-                      </td>
+                      <td>{user.tahun_id?.name || "Tidak ada data"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -465,7 +496,7 @@ const GuruList = () => {
           <div className="modal-background" onClick={closeModal}></div>
           <div className="modal-card">
             <section className="modal-card-body">
-              <AddUser Role="guru" close={closeModal} />
+              <AddUser Role="siswa" close={closeModal} />
             </section>
           </div>
           <button
@@ -495,4 +526,4 @@ const GuruList = () => {
   );
 };
 
-export default GuruList;
+export default SiswaListTA;

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { getSiswa } from "../../services/siswaService.js";
 import { getKelas } from "../../services/kelasService.js";
 import { importUserUpdateKelas } from "../../services/userService.js";
 import AuthLayouts from "../../layouts/AuthLayouts.jsx";
 import useAuth from "../../services/authService.js";
 import { BsFileEarmarkArrowUp } from "react-icons/bs";
-import ExcelJS from 'exceljs'; // Import ExcelJS
+import ExcelJS from "exceljs"; // Import ExcelJS
+import { getTahun } from "../../services/tahunAjarSevice.js";
 
 const SiswaExport = () => {
   const [selectedClass, setSelectedClass] = useState(""); // Menyimpan kelas yang dipilih
@@ -13,6 +14,9 @@ const SiswaExport = () => {
   const [kelasList, setKelasList] = useState([]); // Menyimpan daftar kelas
   const [file, setFile] = useState(null); // Menyimpan file yang diunggah
   const { token } = useAuth(); // Token untuk autentikasi
+  const [tahunList, setTahunList] = useState([]);
+  const [selectedTahun, setSelectedTahun] = useState("");
+  const [jumlahSiswa, setJumlahSiswa] = useState(0);
 
   // Mengambil daftar kelas dari server saat komponen dimuat
   useEffect(() => {
@@ -24,8 +28,44 @@ const SiswaExport = () => {
         console.error("Gagal memuat data kelas", error);
       }
     };
+    const fetchTahun = async () => {
+      try {
+        const response = await getTahun(token);
+        setTahunList(response);
+      } catch (error) {
+        console.error("Gagal memuat data tahun ajar", error);
+      }
+    };
+
     fetchKelas();
+    fetchTahun(); // ← panggil di sini
   }, [token]);
+
+  useEffect(() => {
+    const fetchFilteredSiswa = async () => {
+      if (!selectedTahun || !selectedClass) {
+        setJumlahSiswa(0); // reset kalau belum lengkap
+        return;
+      }
+
+      try {
+        const allSiswa = await getSiswa(token);
+
+        const filtered = allSiswa.filter(
+          (siswa) =>
+            siswa.tahun_id?._id === selectedTahun &&
+            siswa.class_id?.name === selectedClass,
+        );
+
+        setJumlahSiswa(filtered.length);
+      } catch (err) {
+        console.error("Gagal mengambil data siswa:", err);
+        setJumlahSiswa(0);
+      }
+    };
+
+    fetchFilteredSiswa();
+  }, [selectedTahun, selectedClass, token]);
 
   // Fungsi untuk mengekspor data siswa dalam format Excel
   const handleExport = async () => {
@@ -38,16 +78,26 @@ const SiswaExport = () => {
       const response = await getSiswa(token); // Meminta data siswa secara umum
       if (response && response.length > 0) {
         // Filter berdasarkan kelas atau angkatan
-        let filteredSiswa = [];
-        if (selectedClass) {
-          // Filter berdasarkan kelas spesifik
-          filteredSiswa = response.filter(
-            (siswa) => siswa.class_id?.name === selectedClass
+        let filteredSiswa = response;
+
+        // Filter tahun ajar dulu (jika dipilih)
+        if (selectedTahun) {
+          filteredSiswa = filteredSiswa.filter(
+            (siswa) => siswa.tahun_id?._id === selectedTahun,
           );
-        } else if (selectedAngkatan) {
-          // Filter berdasarkan angkatan (misal 7, 8, atau 9)
-          filteredSiswa = response.filter((siswa) => {
-            const kelas = siswa.class_id?.name; // Misalnya '7a', '7b', dll.
+        }
+
+        // Filter kelas jika dipilih
+        if (selectedClass) {
+          filteredSiswa = filteredSiswa.filter(
+            (siswa) => siswa.class_id?.name === selectedClass,
+          );
+        }
+
+        // Filter angkatan jika dipilih (dan tidak pilih kelas)
+        if (!selectedClass && selectedAngkatan) {
+          filteredSiswa = filteredSiswa.filter((siswa) => {
+            const kelas = siswa.class_id?.name;
             return kelas && kelas.startsWith(selectedAngkatan);
           });
         }
@@ -56,15 +106,16 @@ const SiswaExport = () => {
         if (filteredSiswa.length > 0) {
           // Membuat workbook dan worksheet menggunakan ExcelJS
           const workbook = new ExcelJS.Workbook();
-          const worksheet = workbook.addWorksheet('Data Siswa');
+          const worksheet = workbook.addWorksheet("Data Siswa");
 
           // Menambahkan header ke worksheet
           worksheet.columns = [
-            { header: 'username', key: 'username' },
-            { header: 'Nama', key: 'name' },
-            { header: 'Alamat', key: 'alamat' },
-            { header: 'Tanggal Lahir', key: 'tgllahir' },
-            { header: 'kelas', key: 'kelas' },
+            { header: "Username", key: "username" },
+            { header: "Nama", key: "name" },
+            { header: "Alamat", key: "alamat" },
+            { header: "Tanggal Lahir", key: "tgllahir" },
+            { header: "Kelas", key: "kelas" },
+            { header: "Tahun", key: "tahun" },
           ];
 
           // Mengurutkan data siswa berdasarkan nama kelas lalu nama siswa
@@ -90,20 +141,24 @@ const SiswaExport = () => {
               alamat: siswa.alamat,
               tgllahir: new Date(siswa.tgllahir).toLocaleDateString(),
               kelas: siswa.class_id?.name || "Tidak ada kelas",
+              tahun: siswa.tahun_id?.name || "Tidak ada tahun ajar",
             });
           });
 
           // Menyimpan file Excel dan mengunduhnya
           worksheet.eachRow((row, rowNumber) => {
-            row.alignment = { vertical: 'middle', horizontal: 'center' };
+            row.alignment = { vertical: "middle", horizontal: "center" };
           });
 
           // Mendownload file Excel
           workbook.xlsx.writeBuffer().then((buffer) => {
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const link = document.createElement('a');
+            const blob = new Blob([buffer], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+            const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `data_siswa_${selectedClass || selectedAngkatan}.xlsx`; // Nama file sesuai kelas atau angkatan
+            link.download = `data_siswa_${selectedClass || selectedAngkatan || "tahun" + selectedTahun}.xlsx`;
+            // Nama file sesuai kelas atau angkatan
             link.click(); // Mengunduh file Excel
           });
         } else {
@@ -129,17 +184,21 @@ const SiswaExport = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await importUserUpdateKelas(formData); // Mengimpor file untuk update kelas
+      const response = await importUserUpdateKelas(formData);
       if (response.data.gagal === 0) {
-        alert(`${response.data.berhasil} Data Berhasil di Update`);    
-      }else if(response.data.gagal !== 0) {
+        alert(`${response.data.berhasil} Data Berhasil di Update`);
+      } else if (response.data.gagal !== 0) {
         alert(`
         Berhasil: ${response.data.berhasil}
         Gagal: ${response.data.gagal}
         Daftar Gagal: 
-        ${response.data.detail_gagal.map(item =>
-        `Row ${item.row - 1}: ${item.data} - Reason: ${item.reason}`).join("\n")}
-      `);  
+        ${response.data.detail_gagal
+          .map(
+            (item) =>
+              `Row ${item.row - 1}: ${item.data} - Reason: ${item.reason}`,
+          )
+          .join("\n")}
+      `);
       } else {
         alert("Gagal mengimpor data.");
       }
@@ -162,6 +221,29 @@ const SiswaExport = () => {
               {/* Export Siswa */}
               <div className="column">
                 <h2 className="title is-5">Export Siswa</h2>
+                {/* Dropdown Tahun Ajar */}
+                <div className="field">
+                  <div className="columns is-vcentered">
+                    <div className="column is-narrow">
+                      <label className="label">Pilih Tahun Ajar</label>
+                    </div>
+                    <div className="column">
+                      <div className="select is-fullwidth is-small">
+                        <select
+                          value={selectedTahun}
+                          onChange={(e) => setSelectedTahun(e.target.value)}
+                        >
+                          <option value="">-- Pilih Tahun Ajar --</option>
+                          {tahunList.map((tahun) => (
+                            <option key={tahun._id} value={tahun._id}>
+                              {tahun.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Dropdown untuk memilih Kelas */}
                 <div className="field">
@@ -187,7 +269,6 @@ const SiswaExport = () => {
                   </div>
                 </div>
 
-
                 {/* Dropdown untuk memilih Angkatan */}
                 <div className="field">
                   <div className="columns is-vcentered">
@@ -209,7 +290,10 @@ const SiswaExport = () => {
                     </div>
                   </div>
                 </div>
-                <p className='is-size-7'>Perhatian. Pilih salah satu kelas atau angkatan</p>
+
+                <p className="is-size-7">
+                  Perhatian. Pilih salah satu kelas atau angkatan
+                </p>
                 <div className="control mt-2">
                   <button
                     className="button is-warning is-small is-fullwidth-mobile"
@@ -254,12 +338,27 @@ const SiswaExport = () => {
                     </button>
                   </div>
                 </div>
-                <p className='is-size-7'>Perhatian</p>
-                <p className='is-size-7'>Header 'username' dan 'kelas' ditulis dengan huruf kecil</p>
-                <p className='is-size-7'>Pastikan data username dan kelas terisi dengan benar sesuai data yang ada di Basis data</p>
+                <p className="is-size-7">Perhatian</p>
+                <p className="is-size-7">
+                 Pastikan  Header 'Username', 'Kelas', dan 'Tahun'  diawali dengan huruf besar.
+                </p>
+                <p className="is-size-7">
+                  Pastikan data username dan kelas terisi dengan benar sesuai
+                  data yang ada di Basis data
+                </p>
+
+                {selectedTahun && selectedClass && (
+                  <div className="notification is-info is-light mt-2">
+                    Jumlah siswa di kelas <strong>{selectedClass}</strong> pada
+                    tahun ajar{" "}
+                    <strong>
+                      {tahunList.find((t) => t._id === selectedTahun)?.name}
+                    </strong>{" "}
+                    adalah: <strong>{jumlahSiswa}</strong>
+                  </div>
+                )}
               </div>
             </div>
-
           </div>
         </div>
       </div>
